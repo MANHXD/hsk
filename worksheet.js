@@ -64,15 +64,18 @@
       s.push('<line x1="' + (x + w / 2) + '" y1="' + y + '" x2="' + (x + w / 2) + '" y2="' + (y + h) + '" ' + thin + "/>", '<line x1="' + x + '" y1="' + (y + h / 2) + '" x2="' + (x + w) + '" y2="' + (y + h / 2) + '" ' + thin + "/>");
       if (o.grid === "mi") s.push('<line x1="' + x + '" y1="' + y + '" x2="' + (x + w) + '" y2="' + (y + h) + '" ' + thin + "/>", '<line x1="' + (x + w) + '" y1="' + y + '" x2="' + x + '" y2="' + (y + h) + '" ' + thin + "/>");
     }
-    // chữ to
-    guide(0, 0, L, bigH);
-    if (sd) s.push(charPaths(sd, (L - Math.min(L, bigH)) / 2, (bigH - Math.min(L, bigH)) / 2, Math.min(L, bigH), "#111"));
-    else s.push('<text x="' + L / 2 + '" y="' + bigH * 0.8 + '" font-size="' + bigH * 0.75 + '" text-anchor="middle" font-family="Noto Serif SC, serif">' + esc(ch) + "</text>");
+    // chữ to: ô luôn vuông L x L nằm giữa cột trái để đường kẻ không méo khi để 3-4 dòng (MANHXD chọn kiểu này 2026-10-21)
+    var sq = Math.min(L, bigH), by = (bigH - sq) / 2;
+    guide(0, by, L, sq);
+    if (sd) s.push(charPaths(sd, (L - sq) / 2, by, sq, "#111"));
+    else s.push('<text x="' + L / 2 + '" y="' + (by + sq * 0.8) + '" font-size="' + sq * 0.75 + '" text-anchor="middle" font-family="Noto Serif SC, serif">' + esc(ch) + "</text>");
+    if (by > 3) { line(0, by, L, by, 0.2); line(0, by + sq, L, by + sq, 0.2); }
     line(0, bigH, L, bigH);
-    // ô nghĩa: Hán Việt + nghĩa tiếng Việt, tự xuống dòng
+    // ô nghĩa: nghĩa tiếng Việt, tự xuống dòng
     var lines = [], vi = String(info.vi || "").split(/[;]/)[0].trim();
     wrap(vi, 14).slice(0, 4).forEach(function (t) { lines.push(t); });
-    var y0 = bigH + c / 2 - (lines.length - 1) * 1.9 + 1.1;
+    var mTop = bigH, mH = H - mTop;
+    var y0 = mTop + mH / 2 - (lines.length - 1) * 1.9 + 1.1;
     lines.forEach(function (t, i) { s.push('<text x="' + L / 2 + '" y="' + (y0 + i * 3.8) + '" font-size="3.1" fill="#222" text-anchor="middle" font-family="Be Vietnam Pro, sans-serif">' + esc(t) + "</text>"); });
     // dòng đầu: pinyin, số nét, thứ tự nét
     var x = L + 2.5, py = (info.py || "").replace(/ /g, "");
