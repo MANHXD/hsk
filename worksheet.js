@@ -71,12 +71,9 @@
     else s.push('<text x="' + L / 2 + '" y="' + (by + sq * 0.8) + '" font-size="' + sq * 0.75 + '" text-anchor="middle" font-family="Noto Serif SC, serif">' + esc(ch) + "</text>");
     if (by > 3) { line(0, by, L, by, 0.2); line(0, by + sq, L, by + sq, 0.2); }
     line(0, bigH, L, bigH);
-    // ô nghĩa: nghĩa tiếng Việt, tự xuống dòng
-    var lines = [], vi = String(info.vi || "").split(/[;]/)[0].trim();
-    wrap(vi, 14).slice(0, 4).forEach(function (t) { lines.push(t); });
-    var mTop = bigH, mH = H - mTop;
-    var y0 = mTop + mH / 2 - (lines.length - 1) * 1.9 + 1.1;
-    lines.forEach(function (t, i) { s.push('<text x="' + L / 2 + '" y="' + (y0 + i * 3.8) + '" font-size="3.1" fill="#222" text-anchor="middle" font-family="Be Vietnam Pro, sans-serif">' + esc(t) + "</text>"); });
+    // ô nghĩa: để trống dòng chấm cho học sinh tự điền nghĩa (MANHXD 2026-10-21: nghĩa tự sinh hay sai)
+    var mTop = bigH, mH = H - mTop, nDot = mH >= 14 ? 2 : 1;
+    for (var di = 0; di < nDot; di++) { var dy = mTop + mH * (di + 1) / (nDot + 1) + 1.2; s.push('<line x1="2.5" y1="' + dy + '" x2="' + (L - 2.5) + '" y2="' + dy + '" stroke="#777" stroke-width="0.3" stroke-dasharray="0.3 1.1" stroke-linecap="round"/>'); }
     // dòng đầu: pinyin, số nét, thứ tự nét
     var x = L + 2.5, py = (info.py || "").replace(/ /g, "");
     s.push('<text x="' + x + '" y="7.6" font-size="3.6" fill="#222" font-family="Be Vietnam Pro, sans-serif">' + esc(py) + "</text>");
