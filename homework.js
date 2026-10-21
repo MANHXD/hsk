@@ -37,7 +37,7 @@
 
   function listView() {
     return '<div><h1 style="font-size:26px">Bài tập về nhà</h1><p class="lead">Phần nghe 模拟测练 trong Sổ tay New HSK 1. Chọn bài, nghe từng câu rồi bấm chọn đáp án, xong bấm Nộp bài.</p></div>' +
-      '<div class="panel hw-name"><label>Tên học sinh<input id="hwName" placeholder="vd: Nguyễn Văn A" value="' + esc(st.name || "") + '" autocomplete="name"></label>' + (window.HSK_WEB && !uid ? '<p class="ls-msg">Bấm "Đăng nhập Google" ở góc trên để bài nộp được gửi thẳng cho giáo viên.</p>' : "") + "</div>" +
+      '<div class="panel hw-name"><label>Tên học sinh<input id="hwName" placeholder="vd: Nguyễn Văn A" value="' + esc(st.name || "") + '" autocomplete="name"></label>' + (window.HSK_WEB && window.HSK_FIREBASE && window.HSK_FIREBASE.apiKey && !uid ? '<p class="ls-msg">Bấm "Đăng nhập Google" ở góc trên để bài nộp được gửi thẳng cho giáo viên.</p>' : "") + "</div>" +
       '<div class="hw-grid">' + LIST.map(card).join("") + "</div>" +
       (teacher ? resultsView() : "");
   }
