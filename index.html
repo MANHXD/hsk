@@ -607,11 +607,11 @@ footer { color: var(--muted); font-size: 13px; padding-block: 0 40px; }
 @media (max-width: 480px) { .ls-grid .ls-wide { grid-column: 1 / -1; } }
 #printRoot { display: none; }
 @media print {
-  @page { size: A4; margin: 0; }
+  @page { size: A4; margin: 10mm 0; } /* lề trên/dưới lặp lại ở mọi trang, phiếu dài sang trang 2 không bị dính mép */
   body.printing-ws > *:not(#printRoot) { display: none !important; }
   body.printing-ws { background: #fff !important; }
   body.printing-ws #printRoot { display: block; }
-  #printRoot .ws-page, #printRoot .ws-ans { margin: 0; box-shadow: none; min-height: 0; }
+  #printRoot .ws-page, #printRoot .ws-ans { margin: 0; box-shadow: none; min-height: 0; padding-top: 0; padding-bottom: 0; }
 }
 </style>
 <link rel="stylesheet" href="web.css">

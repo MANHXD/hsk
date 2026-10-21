@@ -54,7 +54,7 @@
       sd.strokes.map(function (d, i) { if (only && i >= n) return ""; return '<path d="' + d + '" fill="' + (i < n ? (i === n - 1 && upto != null && !only ? "#b03a2e" : color) : "#d2d2d2") + '"/>'; }).join("") + "</g>";
   }
   function head(o) { return '<div class="ws-head"><span class="ws-hz">姓名:</span><span class="ws-by">' + "by: MANHXD" + '</span><span class="ws-hz ws-date">年<i></i>月<i></i>日</span></div>'; }
-  function charList(o) { return A.hanChars ? A.hanChars(o.chars || "") : []; }
+  function charList(o) { var seen = {}; return (A.hanChars ? A.hanChars(o.chars || "") : []).filter(function (c) { return seen[c] ? false : (seen[c] = 1); }); } /* chữ trùng chỉ in 1 khối */
   // Khối luyện một chữ theo mẫu vở: cột trái chữ to + bộ thủ + cấu trúc, bên phải pinyin, số nét, thứ tự nét, các dòng ô
   function charBlock(ch, o) {
     var L = 26, c = CELL, cols = Math.min(+o.chCols || 10, Math.floor((186 - L) / CELL)), W = L + cols * c, top = 13, rows = Math.max(2, Math.min(4, +o.chRows || 2)), H = top + rows * c;
@@ -212,7 +212,7 @@
       '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700&family=Noto+Serif+SC:wght@500;700&display=swap">' +
       '<style>:root{--font-hz:"Noto Serif SC","Songti SC","SimSun","Noto Sans SC","PingFang SC",serif}' +
       'body{margin:0;background:#eee}.tip{font:14px sans-serif;text-align:center;padding:10px}' + sheetCSS() +
-      '@page{size:A4;margin:0}@media print{body{background:#fff}.tip{display:none}.ws-page,.ws-ans{margin:0;box-shadow:none}}</style></head><body>' +
+      '@page{size:A4;margin:10mm 0}@media print{body{background:#fff}.tip{display:none}.ws-page,.ws-ans{margin:0;box-shadow:none;min-height:0;padding-top:0;padding-bottom:0}}</style></head><body>' +
       '<div class="tip">Bấm Ctrl+P (trên điện thoại: Chia sẻ, In), chọn "Lưu dưới dạng PDF", khổ A4, lề Không.</div>' + body +
       '<script>window.onload=function(){setTimeout(function(){window.print()},600)}<\/script></body></html>';
   }

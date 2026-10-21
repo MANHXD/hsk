@@ -53,7 +53,7 @@
   } };
 
   window.claude = { use: async function (name) {
-    if (name === "downloads") return dl;
+    if (name === "downloads") return null; /* web thường: in thẳng bằng hộp in của trình duyệt (printNative) */
     if (!ready) return null;
     var u = await first;
     if (name === "db") return fs; /* Firestore compat: collection().onSnapshot/add, doc().get/set/delete giống API cũ */
