@@ -1,0 +1,7 @@
+/* Thanh đăng nhập Google của bản web riêng. by: MANHXD */
+.g-auth { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-left: auto; font-size: 13px; }
+.g-auth img { width: 26px; height: 26px; border-radius: 50%; }
+.g-auth .g-name { font-weight: 600; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.g-auth small { color: var(--bad); flex-basis: 100%; text-align: right; }
+.g-auth small:empty { display: none; }
+@media (max-width: 560px) { .g-auth .g-name { display: none; } }

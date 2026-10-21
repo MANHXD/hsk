@@ -1,0 +1,23 @@
+rules_version = '2';
+// Luật Firestore cho web HSK 3.0 MANHXD. by: MANHXD
+// Giáo viên = tài khoản Google trong danh sách dưới (trùng HSK_TEACHERS trong firebase-config.js).
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function teacher() {
+      return request.auth != null && request.auth.token.email_verified == true
+        && request.auth.token.email in ['vudangmanhworking@gmail.com'];
+    }
+    // Đáp án, mốc nghe, link audio: ai cũng đọc được, chỉ giáo viên sửa.
+    match /keys/{f}   { allow read: if true; allow write: if teacher(); }
+    match /tracks/{t} { allow read: if true; allow write: if teacher(); }
+    match /audio/{a}  { allow read: if true; allow write: if teacher(); }
+    // Bài nộp: học sinh chỉ đọc/ghi bài của mình, giáo viên đọc tất cả.
+    match /homework/{uid} {
+      allow read: if teacher() || (request.auth != null && request.auth.uid == uid);
+      allow write: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['name', 'subs', 'at'])
+        && request.resource.size() < 200000;
+      allow delete: if teacher();
+    }
+  }
+}
