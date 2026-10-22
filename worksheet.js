@@ -123,8 +123,9 @@
     var ans = o.answers && items.some(function (it) { return it.hz; }) ? '<div class="ws-ans"><div class="ws-anstitle">Đáp án</div>' + items.map(function (it, n) {
       return "<div><b>" + (n + 1) + ".</b> " + esc(it.vi) + '<div class="ws-hz ws-ansz">' + esc(it.hz || "...") + '</div><div class="ws-anspy">' + esc(it.py || "") + "</div></div>";
     }).join("") + "</div>" : "";
-    // 5 ô trở xuống: xếp 2 câu cạnh nhau, 2 ô: xếp 3 cột cho cân trang
-    var ncol = cols <= 2 ? 3 : cols <= 5 ? 2 : 1;
+    // 5 ô trở xuống: xếp 2 câu cạnh nhau, 2 ô: xếp 5 cột cho kín khổ A4
+    var ncol = cols <= 2 ? 5 : cols <= 5 ? 2 : 1;
+    if (ncol > 2) body = body.replace(/class="ws-q"/g, 'class="ws-q" style="min-height:12.9mm"'); /* câu dài xuống 2 dòng vẫn thẳng hàng ô */
     if (ncol > 1) body = '<div class="ws-two" style="grid-template-columns:' + Array(ncol + 1).join(cols * c + "mm ").trim() + '">' + body + "</div>";
     return '<div class="ws-page' + "" + '">' + head(o) + body + "</div>" + ans;
   }
