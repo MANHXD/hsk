@@ -117,15 +117,15 @@
         else if (o.trace === "all") chars.slice(0, cols * rows).forEach(function (ch, k) { tr.push({ r: Math.floor(k / cols), k: k % cols, ch: ch }); });
       }
       return '<div class="ws-item" style="width:' + cols * c + 'mm"><div class="ws-q">' + (n + 1) + ". " + esc(it.vi) + "</div>" +
-        '<div class="ws-py"><span>pinyin</span><div class="ws-pyline">' + (o.showPy && it.py ? '<em>' + esc(it.py) + "</em>" : "") + "</div></div>" +
+        '<div class="ws-py">' + (cols <= 2 ? "" : "<span>pinyin</span>") + '<div class="ws-pyline">' + (o.showPy && it.py ? '<em>' + esc(it.py) + "</em>" : "") + "</div></div>" +
         gridSVG(cols, rows, c, o.grid, tr) + "</div>";
     }).join("");
     var ans = o.answers && items.some(function (it) { return it.hz; }) ? '<div class="ws-ans"><div class="ws-anstitle">Đáp án</div>' + items.map(function (it, n) {
       return "<div><b>" + (n + 1) + ".</b> " + esc(it.vi) + '<div class="ws-hz ws-ansz">' + esc(it.hz || "...") + '</div><div class="ws-anspy">' + esc(it.py || "") + "</div></div>";
     }).join("") + "</div>" : "";
-    // 5 ô trở xuống: xếp 2 câu cạnh nhau cho cân trang
-    var two = cols <= 5;
-    if (two) body = '<div class="ws-two" style="grid-template-columns:' + cols * c + "mm " + cols * c + 'mm">' + body + "</div>";
+    // 5 ô trở xuống: xếp 2 câu cạnh nhau, 2 ô: xếp 3 cột cho cân trang
+    var ncol = cols <= 2 ? 3 : cols <= 5 ? 2 : 1;
+    if (ncol > 1) body = '<div class="ws-two" style="grid-template-columns:' + Array(ncol + 1).join(cols * c + "mm ").trim() + '">' + body + "</div>";
     return '<div class="ws-page' + "" + '">' + head(o) + body + "</div>" + ans;
   }
 
@@ -139,7 +139,7 @@
       '<div' + (cau ? " hidden" : "") + '><p class="lead" style="margin:0 0 8px">Gõ hoặc dán các chữ Hán cần luyện (dán cả câu cũng được, chữ trùng sẽ tự bỏ). Mỗi chữ một khối: chữ mẫu to, bộ thủ, cấu trúc, pinyin, số nét, thứ tự nét và các dòng ô để viết.</p><textarea id="wsChars" rows="3" spellcheck="false" aria-label="Danh sách chữ">' + esc(o.chars) + "</textarea></div>" +
       '<div class="row">' +
         "<label>Kiểu ô " + sel("wsGrid", o.grid, [["mi", "Ô mễ 米"], ["tian", "Ô điền 田"]]) + "</label>" +
-        "<label" + (cau ? "" : " hidden") + ">Số ô ngang " + sel("wsCols", o.cols, [4, 5, 6, 7, 8, 9, 10, 11].map(function (n) { return [n, n + " ô"]; })) + "</label>" +
+        "<label" + (cau ? "" : " hidden") + ">Số ô ngang " + sel("wsCols", o.cols, [2, 4, 5, 6, 7, 8, 9, 10, 11].map(function (n) { return [n, n + " ô"]; })) + "</label>" +
         "<label" + (cau ? " hidden" : "") + ">Số ô ngang " + sel("wsChCols", o.chCols, [4, 5, 6, 7, 8, 9, 10].map(function (n) { return [n, n + " ô"]; })) + "</label>" +
         '<input type="hidden" id="wsCell" value="' + o.cell + '">' +
         '<span class="row" style="display:contents"' + (cau ? "" : " hidden") + ">" +
