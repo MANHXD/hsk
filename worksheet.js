@@ -57,8 +57,8 @@
   function charList(o) { var seen = {}; return (A.hanChars ? A.hanChars(o.chars || "") : []).filter(function (c) { return seen[c] ? false : (seen[c] = 1); }); } /* chữ trùng chỉ in 1 khối */
   // Khối luyện một chữ theo mẫu vở: cột trái chữ to + bộ thủ + cấu trúc, bên phải pinyin, số nét, thứ tự nét, các dòng ô
   function charBlock(ch, o) {
-    var L = 26, c = CELL, cols = Math.min(+o.chCols || 10, Math.floor((186 - L) / CELL)), W = L + cols * c, top = 13, rows = Math.max(2, Math.min(4, +o.chRows || 2)), H = top + rows * c;
-    var sd = window.HZ_STROKES && window.HZ_STROKES[ch], cv = (window.HZ_CHARVI || {})[ch], info = cv ? { py: cv[0], hv: cv[1], vi: cv[2] } : (A.charInfo && A.charInfo(ch)) || {}, bigH = H - c, s = [];
+    var L = 26, c = CELL, cols = Math.min(+o.chCols || 10, Math.floor((186 - L) / CELL)), W = L + cols * c, top = 13, rows = Math.max(1, Math.min(4, +o.chRows || 2)), H = top + rows * c;
+    var sd = window.HZ_STROKES && window.HZ_STROKES[ch], cv = (window.HZ_CHARVI || {})[ch], info = cv ? { py: cv[0], hv: cv[1], vi: cv[2] } : (A.charInfo && A.charInfo(ch)) || {}, bigH = rows === 1 ? H : H - c, s = [];
     var thin = 'stroke="#9a9a9a" stroke-width="0.18" stroke-dasharray="1 0.8"', line = function (x1, y1, x2, y2, w) { s.push('<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="#444" stroke-width="' + (w || 0.25) + '"/>'); };
     function guide(x, y, w, h) {
       s.push('<line x1="' + (x + w / 2) + '" y1="' + y + '" x2="' + (x + w / 2) + '" y2="' + (y + h) + '" ' + thin + "/>", '<line x1="' + x + '" y1="' + (y + h / 2) + '" x2="' + (x + w) + '" y2="' + (y + h / 2) + '" ' + thin + "/>");
@@ -70,9 +70,9 @@
     if (sd) s.push(charPaths(sd, (L - sq) / 2, by, sq, "#111"));
     else s.push('<text x="' + L / 2 + '" y="' + (by + sq * 0.8) + '" font-size="' + sq * 0.75 + '" text-anchor="middle" font-family="Noto Serif SC, serif">' + esc(ch) + "</text>");
     if (by > 3) { line(0, by, L, by, 0.2); line(0, by + sq, L, by + sq, 0.2); }
-    line(0, bigH, L, bigH);
+    if (rows > 1) line(0, bigH, L, bigH);
     // ô nghĩa: để trống dòng chấm cho học sinh tự điền nghĩa (MANHXD 2026-10-21: nghĩa tự sinh hay sai)
-    var mTop = bigH, mH = H - mTop, nDot = mH >= 14 ? 2 : 1;
+    var mTop = bigH, mH = H - mTop, nDot = rows === 1 ? 0 : mH >= 14 ? 2 : 1; /* 1 dòng: không có ô nghĩa */
     for (var di = 0; di < nDot; di++) { var dy = mTop + mH * (di + 1) / (nDot + 1) + 1.2; s.push('<line x1="2.5" y1="' + dy + '" x2="' + (L - 2.5) + '" y2="' + dy + '" stroke="#777" stroke-width="0.3" stroke-dasharray="0.3 1.1" stroke-linecap="round"/>'); }
     // dòng đầu: pinyin, số nét, thứ tự nét
     var x = L + 2.5, py = (info.py || "").replace(/ /g, "");
@@ -146,7 +146,7 @@
         '<span class="row" style="display:contents"' + (cau ? "" : " hidden") + ">" +
         "<label" + (cau ? "" : " hidden") + ">Số dòng mỗi câu " + sel("wsRows", o.rows, [[1, "1"], [2, "2"], [3, "3"], [4, "4"], [5, "5"], [6, "6"]]) + "</label>" +
         "<label" + (cau ? "" : " hidden") + ">Chữ mẫu mờ " + sel("wsTrace", o.trace, [["none", "Không"], ["row", "Dòng đầu"], ["all", "Kín cả lưới"]]) + "</label></span>" +
-        "<label" + (cau ? " hidden" : "") + ">Số dòng mỗi chữ " + sel("wsChRows", o.chRows, [[2, "2"], [3, "3"], [4, "4"]]) + "</label>" +
+        "<label" + (cau ? " hidden" : "") + ">Số dòng mỗi chữ " + sel("wsChRows", o.chRows, [[1, "1"], [2, "2"], [3, "3"], [4, "4"]]) + "</label>" +
         "<label" + (cau ? " hidden" : "") + ">Ô tô mờ " + sel("wsChTrace", o.chTrace, [[0, "Không"], [1, "1 ô"], [3, "3 ô"], [5, "5 ô"], [-1, "Cả dòng đầu"]]) + "</label>" +
       "</div><div class=\"row\">" +
         '<label class="toggle"' + (cau ? "" : " hidden") + '><input type="checkbox" id="wsPy"' + (o.showPy ? " checked" : "") + "> Ghi sẵn pinyin</label>" +
