@@ -105,7 +105,11 @@
     if (cur) out.push(cur); return out;
   }
   function charSheetHTML(o) {
-    return '<div class="ws-page">' + head(o) + charList(o).map(function (ch) { return charBlock(ch, o); }).join("") + "</div>";
+    var body = charList(o).map(function (ch) { return charBlock(ch, o); }).join("");
+    // khối hẹp (2 khối vừa 186mm) thì xếp 2 cột cho đỡ tốn giấy (MANHXD 2026-10-24)
+    var W = 26 + Math.min(+o.chCols || 10, Math.floor((186 - 26) / CELL)) * CELL;
+    if (2 * W + 3 <= 186) body = '<div class="ws-two" style="grid-template-columns:' + W + "mm " + W + 'mm">' + body + "</div>";
+    return '<div class="ws-page">' + head(o) + body + "</div>";
   }
   function sheetHTML(o) {
     if (o.mode === "chu") return charSheetHTML(o);
