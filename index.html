@@ -519,6 +519,29 @@ footer { color: var(--muted); font-size: 13px; padding-block: 0 40px; }
 .ws-anstitle { font-weight: 700; font-size: 5mm; margin-bottom: 6mm; }
 .ws-ansz { font-size: 7mm; margin-top: 1mm; }
 .ws-anspy { color: #555; }
+.ws-tvform .ws-in { font: inherit; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); min-width: 0; }
+.ws-tvform .ws-lbl { color: var(--muted); font-size: 14px; }
+.ws-tvpage { position: relative; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.ws-tvtitle { display: flex; align-items: center; gap: 3mm; margin: 0 0 4mm; padding-bottom: 3mm; border-bottom: 0.5mm solid #1f4e5f; }
+.ws-tvtitle b { display: block; font-size: 7mm; letter-spacing: 1.2mm; color: #1f4e5f; }
+.ws-tvtitle small { display: block; font-size: 3.4mm; color: #666; margin-top: 0.5mm; }
+.ws-tvseal { width: 10mm; height: 10mm; border-radius: 2mm; background: #1f4e5f; color: #fff; display: grid; place-items: center; font-size: 6mm; font-weight: 700; flex: none; }
+.ws-tvpg { margin-left: auto; font-size: 3mm; color: #888; }
+.ws-tv { width: 100%; min-width: 0; border-collapse: collapse; table-layout: fixed; font-size: 3.8mm; }
+.ws-tv th { background: #e6eef2; color: #1f4e5f; font-weight: 700; font-size: 3.4mm; text-align: left; padding: 2mm 2.5mm; border: 0.3mm solid #6f8596; }
+.ws-tv td { border: 0.3mm solid #6f8596; padding: 0 2.5mm; vertical-align: middle; }
+.ws-tv tbody tr:nth-child(even) td.ws-tv-no { background-color: #f3f6f8; }
+.ws-tv-oli tbody td:not(.ws-tv-no) { background-image: linear-gradient(#dce6ee 0.2mm, transparent 0.2mm), linear-gradient(90deg, #dce6ee 0.2mm, transparent 0.2mm); background-size: 5mm 5mm; background-position: -0.1mm -0.1mm; }
+.ws-tv-line tbody td:not(.ws-tv-no) { background-image: linear-gradient(transparent calc(50% - 0.1mm), #dce6ee calc(50% - 0.1mm), #dce6ee calc(50% + 0.1mm), transparent calc(50% + 0.1mm)); }
+.ws-tv .ws-tv-no { text-align: center; color: #888; font-size: 3.2mm; padding: 0; }
+.ws-tv .ws-tv-hz { padding: 1.5mm 2mm; }
+.ws-tvmi { display: block; }
+.ws-tvtxt { position: relative; background: #fff; padding: 0 0.6mm; }
+.ws-tv-hz .ws-tvtxt { font-size: 6.5mm; }
+.ws-tv-py .ws-tvtxt { color: #333; }
+.ws-tv-vi .ws-tvtxt { color: #222; }
+.ws-tvkey .ws-tv-hz .ws-tvtxt { font-size: 5.2mm; }
+.ws-tvfoot { margin-top: 4mm; display: flex; justify-content: space-between; font-size: 2.8mm; color: #888; letter-spacing: 0.3mm; }
 .ws-msg { margin: 0; padding: 8px 12px; border-radius: 8px; background: var(--sunk); font-size: 14px; }
 .ls-form { display: grid; gap: 12px; }
 .ls-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
@@ -630,10 +653,10 @@ footer { color: var(--muted); font-size: 13px; padding-block: 0 40px; }
       <button class="tab" role="tab" data-tab="baigiang" id="tab-baigiang">Bài giảng trên lớp</button>
       <button class="tab" role="tab" data-tab="tuvung" id="tab-tuvung">Từ vựng</button>
       <button class="tab" role="tab" data-tab="phatam" id="tab-phatam">Phát âm</button>
+      <button class="tab" role="tab" data-tab="kiemtra" id="tab-kiemtra">Kiểm tra</button>
       <button class="tab" role="tab" data-tab="trochoi" id="tab-trochoi">Trò chơi</button>
       <button class="tab" role="tab" data-tab="phieuviet" id="tab-phieuviet">Phiếu tập viết</button>
       <button class="tab" role="tab" data-tab="nghe" id="tab-nghe">Nghe giáo trình</button>
-      <button class="tab" role="tab" data-tab="btvn" id="tab-btvn">Bài tập về nhà</button>
     </nav>
   </div></div>
 </header>
@@ -659,7 +682,5 @@ footer { color: var(--muted); font-size: 13px; padding-block: 0 40px; }
 <script src="games.js"></script>
 <script src="worksheet.js"></script>
 <script src="listen.js"></script>
-<script src="hw-keys.js"></script>
-<script src="homework.js"></script>
 </body>
 </html>

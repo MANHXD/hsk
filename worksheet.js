@@ -8,7 +8,8 @@
   var HAN = /[㐀-鿿]/;
   var SAMPLE = "Tôi 30 tuổi rồi, còn bạn? | 我三十岁了，你呢？\nBố bạn năm nay bao nhiêu tuổi? | 你爸爸今年多大了？\nCon trai tôi năm nay 8 tuổi. | 我儿子今年八岁。\nTôi có 2 quyển sách tiếng Trung. | 我有两本中文书。";
   var SAMPLE_CH = "儿子孩子女";
-  var DEF = { mode: "cau", text: SAMPLE, chars: SAMPLE_CH, grid: "mi", cell: 13, rows: 3, trace: "none", showPy: false, answers: true, by: "MANHXD", chRows: 2, chTrace: 0, chOrder: true, chNote: true, cols: 10, chCols: 10 };
+  var SAMPLE_TV = "好\n你\n大\n家\n大家\n您\n们\n你们\n学生\n老师";
+  var DEF = { mode: "cau", text: SAMPLE, chars: SAMPLE_CH, grid: "mi", cell: 13, rows: 3, trace: "none", showPy: false, answers: true, by: "MANHXD", chRows: 2, chTrace: 0, chOrder: true, chNote: true, cols: 10, chCols: 10, tvText: SAMPLE_TV, tvTitle: "TỪ VỰNG", tvSub: "", tvPre: "vi", tvRowH: 15, tvBg: "oli", tvMi: true, tvOrder: "keep", tvSeed: 1, tvAns: true, tvFill: true };
   var CELL = 16; // cỡ ô chuẩn (mm), cố định; đổi số ô chỉ đổi độ dài lưới
   function opt() { var o = S.sheet || (S.sheet = {}); Object.keys(DEF).forEach(function (k) { if (o[k] === undefined) o[k] = DEF[k]; }); return o; }
 
@@ -111,8 +112,73 @@
     if (2 * W + 3 <= 186) body = '<div class="ws-two" style="grid-template-columns:' + W + "mm " + W + 'mm">' + body + "</div>";
     return '<div class="ws-page">' + head(o) + body + "</div>";
   }
+
+  /* ---------- Phiếu luyện ghi nhớ từ vựng (MANHXD 2026-10-26) ----------
+     Mỗi dòng: "中文" hoặc "中文 | nghĩa" hoặc "nghĩa | 中文", thêm "| âm mô phỏng" nếu muốn có trong đáp án.
+     Nghĩa và pinyin tự lấy từ kho từ vựng khi bỏ trống. */
+  var TV_COLS = [["hz", "Tiếng Trung"], ["py", "Phiên âm"], ["am", "Âm mô phỏng"], ["vi", "Nghĩa"]];
+  var TV_W = { no: 9, hz: 47, py: 36, am: 36, vi: 56 }; // tổng 184mm, chừa viền cho khổ 186mm
+  function tvParse(text) {
+    return String(text || "").split("\n").map(function (l) { return l.trim(); }).filter(Boolean).map(function (l) {
+      var p = l.split("|").map(function (x) { return x.trim(); }), hz = "", rest = [];
+      p.forEach(function (x) { if (!hz && HAN.test(x) && !/[a-zà-ỹ]/i.test(x.replace(/[㐀-鿿]/g, ""))) hz = x; else rest.push(x); });
+      var v = hz && A.lookup ? A.lookup(hz) : null;
+      var vi = rest[0] || (v && !v.pos || v && v.pos.indexOf("tiếng Anh") < 0 ? (v && v.vi) || "" : "");
+      return { hz: hz, vi: vi.replace(/^\d+[.)]\s*/, ""), am: rest[1] || "", py: hz ? ((v && v.syl) || (A.pinyinOf ? A.pinyinOf(hz) : "")) : "" };
+    });
+  }
+  function seeded(arr, seed) {
+    var a = arr.slice(), x = (seed * 9301 + 49297) % 233280 || 1;
+    for (var i = a.length - 1; i > 0; i--) { x = (x * 9301 + 49297) % 233280; var j = Math.floor(x / 233280 * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+    return a;
+  }
+  function miBoxes(n, size, kind) {
+    var s = [], w = n * size, m = size / 2, thin = 'stroke="#b9c3cc" stroke-width="0.18" stroke-dasharray="0.9 0.7"';
+    for (var k = 0; k < n; k++) {
+      var x = k * size;
+      s.push('<line x1="' + (x + m) + '" y1="0" x2="' + (x + m) + '" y2="' + size + '" ' + thin + '/><line x1="' + x + '" y1="' + m + '" x2="' + (x + size) + '" y2="' + m + '" ' + thin + "/>");
+      if (kind === "mi") s.push('<line x1="' + x + '" y1="0" x2="' + (x + size) + '" y2="' + size + '" ' + thin + '/><line x1="' + (x + size) + '" y1="0" x2="' + x + '" y2="' + size + '" ' + thin + "/>");
+      s.push('<rect x="' + (x + 0.1) + '" y="0.1" width="' + (size - 0.2) + '" height="' + (size - 0.2) + '" fill="none" stroke="#6f8596" stroke-width="0.25"/>');
+    }
+    return '<svg class="ws-tvmi" viewBox="0 0 ' + w + " " + size + '" style="width:' + w + "mm;height:" + size + 'mm" xmlns="http://www.w3.org/2000/svg">' + s.join("") + "</svg>";
+  }
+  function tvCell(k, it, o, show, rowH) {
+    var txt = show ? (k === "hz" ? it.hz : k === "py" ? it.py : k === "am" ? it.am : it.vi) : "";
+    if (k === "hz" && !show && o.tvMi) { var size = Math.min(rowH - 3, 12), n = Math.max(1, Math.min(Math.floor((TV_W.hz - 3) / size), Array.from(it.hz || "").length || 2)); return '<td class="ws-tv-hz">' + miBoxes(n, size, o.grid) + "</td>"; }
+    return '<td class="ws-tv-' + k + '">' + (txt ? '<span class="' + (k === "hz" ? "ws-hz " : "") + 'ws-tvtxt">' + esc(txt) + "</span>" : "") + "</td>";
+  }
+  function tvTable(rows, o, pre, start) {
+    var rowH = +o.tvRowH || 15;
+    var pc = function (mm) { return (mm / 184 * 100).toFixed(2) + "%"; }; // phần trăm để bảng luôn vừa khổ, không tràn lề
+    var cg = '<colgroup><col style="width:' + pc(TV_W.no) + '">' + TV_COLS.map(function (c) { return '<col style="width:' + pc(TV_W[c[0]]) + '">'; }).join("") + "</colgroup>";
+    var th = "<thead><tr><th>#</th>" + TV_COLS.map(function (c) { return "<th>" + c[1] + "</th>"; }).join("") + "</tr></thead>";
+    var tb = rows.map(function (it, i) {
+      return '<tr style="height:' + rowH + 'mm"><td class="ws-tv-no">' + (it ? start + i + 1 : "") + "</td>" + TV_COLS.map(function (c) { return it ? tvCell(c[0], it, o, pre[c[0]], rowH) : '<td class="ws-tv-' + c[0] + '"></td>'; }).join("") + "</tr>";
+    }).join("");
+    return '<table class="ws-tv ws-tv-' + (o.tvBg || "oli") + '">' + cg + th + "<tbody>" + tb + "</tbody></table>";
+  }
+  function tvTitle(o, cont, key) {
+    return '<div class="ws-tvtitle"><span class="ws-tvseal ws-hz">孟</span><div><b>' + esc(o.tvTitle || "TỪ VỰNG") + (key ? " - ĐÁP ÁN" : "") + "</b>" + (o.tvSub ? "<small>" + esc(o.tvSub) + "</small>" : "") + "</div>" + (cont ? '<span class="ws-tvpg">tiếp theo</span>' : "") + "</div>";
+  }
+  function tvSheetHTML(o) {
+    var items = tvParse(o.tvText);
+    if (o.tvOrder === "shuffle") items = seeded(items, +o.tvSeed || 1);
+    var pre = {}; String(o.tvPre || "vi").split(",").forEach(function (k) { if (k) pre[k] = 1; });
+    var rowH = +o.tvRowH || 15, per = Math.max(4, Math.floor((277 - 40) / rowH)), pages = [], out = "";
+    for (var i = 0; i < Math.max(1, items.length); i += per) pages.push(items.slice(i, i + per));
+    pages.forEach(function (pg, n) {
+      var rows = pg.slice(); if (o.tvFill || !items.length) while (rows.length < per) rows.push(null);
+      out += '<div class="ws-page ws-tvpage">' + head(o) + tvTitle(o, n > 0) + tvTable(rows, o, pre, n * per) + '<div class="ws-tvfoot">HỌC TIẾNG TRUNG CÙNG MANHXD<span>by: MANHXD</span></div></div>';
+    });
+    if (o.tvAns && items.some(function (it) { return it.hz; })) {
+      var all = { hz: 1, py: 1, am: 1, vi: 1 }, ko = Object.assign({}, o, { tvMi: false, tvRowH: 11, tvBg: "none" }), per2 = Math.floor((277 - 40) / 11);
+      for (var j = 0; j < items.length; j += per2) out += '<div class="ws-page ws-tvpage ws-tvkey">' + head(o) + tvTitle(o, j > 0, true) + tvTable(items.slice(j, j + per2), ko, all, j) + '<div class="ws-tvfoot">HỌC TIẾNG TRUNG CÙNG MANHXD<span>by: MANHXD</span></div></div>';
+    }
+    return out;
+  }
   function sheetHTML(o) {
     if (o.mode === "chu") return charSheetHTML(o);
+    if (o.mode === "tv") return tvSheetHTML(o);
     var items = parse(o.text), c = CELL, cols = Math.min(+o.cols || 10, Math.floor(186 / CELL)), rows = Math.max(1, Math.min(8, +o.rows || 3));
     var body = items.map(function (it, n) {
       var chars = Array.from(it.hz).filter(function (ch) { return !/\s/.test(ch); }), tr = [];
@@ -137,21 +203,34 @@
   function view() {
     var o = opt();
     function sel(id, val, list) { return '<select id="' + id + '">' + list.map(function (x) { return '<option value="' + x[0] + '"' + (String(val) === String(x[0]) ? " selected" : "") + ">" + x[1] + "</option>"; }).join("") + "</select>"; }
-    var cau = o.mode !== "chu";
+    var cau = o.mode !== "chu" && o.mode !== "tv", chu = o.mode === "chu", tv = o.mode === "tv";
+    var pre = {}; String(o.tvPre || "vi").split(",").forEach(function (k) { if (k) pre[k] = 1; });
     return '<div><h1 style="font-size:26px">Phiếu tập viết</h1><p class="lead">Phiếu in khổ A4, ô mễ chuẩn 16 x 16 mm, đổi số ô chỉ làm lưới dài hoặc ngắn lại. Bấm "Tải file / In" để lưu file rồi in.</p></div>' +
-      '<div class="panel ws-form"><div class="seg" role="tablist"><button data-wsmode="cau" aria-selected="' + cau + '">Theo câu</button><button data-wsmode="chu" aria-selected="' + !cau + '">Theo chữ</button></div>' +
+      '<div class="panel ws-form"><div class="seg" role="tablist"><button data-wsmode="cau" aria-selected="' + cau + '">Theo câu</button><button data-wsmode="chu" aria-selected="' + chu + '">Theo chữ</button><button data-wsmode="tv" aria-selected="' + tv + '">Từ vựng</button></div>' +
       '<div' + (cau ? "" : " hidden") + '><p class="lead" style="margin:0 0 8px">Mỗi dòng một câu: <b>câu tiếng Việt | chữ Hán</b>. Phần chữ Hán không bắt buộc, có thì làm chữ mẫu và đáp án.</p><textarea id="wsText" rows="6" spellcheck="false" aria-label="Danh sách câu">' + esc(o.text) + "</textarea></div>" +
-      '<div' + (cau ? " hidden" : "") + '><p class="lead" style="margin:0 0 8px">Gõ hoặc dán các chữ Hán cần luyện (dán cả câu cũng được, chữ trùng sẽ tự bỏ). Mỗi chữ một khối: chữ mẫu to, bộ thủ, cấu trúc, pinyin, số nét, thứ tự nét và các dòng ô để viết.</p><textarea id="wsChars" rows="3" spellcheck="false" aria-label="Danh sách chữ">' + esc(o.chars) + "</textarea></div>" +
+      '<div' + (chu ? "" : " hidden") + '><p class="lead" style="margin:0 0 8px">Gõ hoặc dán các chữ Hán cần luyện (dán cả câu cũng được, chữ trùng sẽ tự bỏ). Mỗi chữ một khối: chữ mẫu to, bộ thủ, cấu trúc, pinyin, số nét, thứ tự nét và các dòng ô để viết.</p><textarea id="wsChars" rows="3" spellcheck="false" aria-label="Danh sách chữ">' + esc(o.chars) + "</textarea></div>" +
+      '<div' + (tv ? "" : " hidden") + ' class="ws-tvform"><p class="lead" style="margin:0 0 8px">Mỗi dòng một từ: <b>中文</b> hoặc <b>中文 | nghĩa</b>. Bỏ trống nghĩa thì app tự lấy từ kho từ vựng. Thêm <b>| âm mô phỏng</b> ở cuối nếu muốn có trong trang đáp án.</p>' +
+        '<div class="row" style="margin-bottom:8px"><label>Lấy từ bài <select id="wsTvSrc"><option value="">Chọn bài...</option>' + (A.lessonOptions ? A.lessonOptions("", true) : "") + '</select></label></div>' +
+        '<textarea id="wsTvText" rows="6" spellcheck="false" aria-label="Danh sách từ vựng">' + esc(o.tvText) + "</textarea>" +
+        '<div class="row" style="margin-top:10px"><label>Tiêu đề <input id="wsTvTitle" class="ws-in" value="' + esc(o.tvTitle) + '"></label><label>Dòng phụ <input id="wsTvSub" class="ws-in" placeholder="vd: Bài 5, 今天我休息" value="' + esc(o.tvSub) + '"></label></div>' +
+        '<div class="row" style="margin-top:10px"><span class="ws-lbl">In sẵn cột:</span>' + TV_COLS.map(function (c) { return '<label class="toggle"><input type="checkbox" class="wsTvPre" value="' + c[0] + '"' + (pre[c[0]] ? " checked" : "") + "> " + c[1] + "</label>"; }).join("") + "</div>" +
+        '<div class="row" style="margin-top:10px">' +
+          "<label>Chiều cao dòng " + sel("wsTvRowH", o.tvRowH, [[12, "Thấp 12 mm"], [15, "Vừa 15 mm"], [18, "Cao 18 mm"]]) + "</label>" +
+          "<label>Nền " + sel("wsTvBg", o.tvBg, [["oli", "Ô li như vở"], ["line", "Kẻ dòng"], ["none", "Trơn"]]) + "</label>" +
+          "<label>Thứ tự " + sel("wsTvOrder", o.tvOrder, [["keep", "Giữ nguyên"], ["shuffle", "Xáo trộn"]]) + "</label>" +
+          '<button class="btn small" id="wsTvShuf"' + (o.tvOrder === "shuffle" ? "" : " hidden") + ">Xáo lại</button>" +
+        "</div>" +
+        '<div class="row" style="margin-top:10px"><label class="toggle"><input type="checkbox" id="wsTvMi"' + (o.tvMi ? " checked" : "") + '> Kẻ ô mễ ở cột Tiếng Trung</label><label class="toggle"><input type="checkbox" id="wsTvFill"' + (o.tvFill ? " checked" : "") + '> Thêm dòng trống cho kín trang</label><label class="toggle"><input type="checkbox" id="wsTvAns"' + (o.tvAns ? " checked" : "") + "> Trang đáp án</label></div></div>" +
       '<div class="row">' +
         "<label>Kiểu ô " + sel("wsGrid", o.grid, [["mi", "Ô mễ 米"], ["tian", "Ô điền 田"]]) + "</label>" +
         "<label" + (cau ? "" : " hidden") + ">Số ô ngang " + sel("wsCols", o.cols, [2, 4, 5, 6, 7, 8, 9, 10, 11].map(function (n) { return [n, n + " ô"]; })) + "</label>" +
-        "<label" + (cau ? " hidden" : "") + ">Số ô ngang " + sel("wsChCols", o.chCols, [4, 5, 6, 7, 8, 9, 10].map(function (n) { return [n, n + " ô"]; })) + "</label>" +
+        "<label" + (chu ? "" : " hidden") + ">Số ô ngang " + sel("wsChCols", o.chCols, [4, 5, 6, 7, 8, 9, 10].map(function (n) { return [n, n + " ô"]; })) + "</label>" +
         '<input type="hidden" id="wsCell" value="' + o.cell + '">' +
         '<span class="row" style="display:contents"' + (cau ? "" : " hidden") + ">" +
         "<label" + (cau ? "" : " hidden") + ">Số dòng mỗi câu " + sel("wsRows", o.rows, [[1, "1"], [2, "2"], [3, "3"], [4, "4"], [5, "5"], [6, "6"]]) + "</label>" +
         "<label" + (cau ? "" : " hidden") + ">Chữ mẫu mờ " + sel("wsTrace", o.trace, [["none", "Không"], ["row", "Dòng đầu"], ["all", "Kín cả lưới"]]) + "</label></span>" +
-        "<label" + (cau ? " hidden" : "") + ">Số dòng mỗi chữ " + sel("wsChRows", o.chRows, [[1, "1"], [2, "2"], [3, "3"], [4, "4"]]) + "</label>" +
-        "<label" + (cau ? " hidden" : "") + ">Ô tô mờ " + sel("wsChTrace", o.chTrace, [[0, "Không"], [1, "1 ô"], [3, "3 ô"], [5, "5 ô"], [-1, "Cả dòng đầu"]]) + "</label>" +
+        "<label" + (chu ? "" : " hidden") + ">Số dòng mỗi chữ " + sel("wsChRows", o.chRows, [[1, "1"], [2, "2"], [3, "3"], [4, "4"]]) + "</label>" +
+        "<label" + (chu ? "" : " hidden") + ">Ô tô mờ " + sel("wsChTrace", o.chTrace, [[0, "Không"], [1, "1 ô"], [3, "3 ô"], [5, "5 ô"], [-1, "Cả dòng đầu"]]) + "</label>" +
       "</div><div class=\"row\">" +
         '<label class="toggle"' + (cau ? "" : " hidden") + '><input type="checkbox" id="wsPy"' + (o.showPy ? " checked" : "") + "> Ghi sẵn pinyin</label>" +
         '<label class="toggle"' + (cau ? "" : " hidden") + '><input type="checkbox" id="wsAns"' + (o.answers ? " checked" : "") + "> Trang đáp án</label>" +
@@ -164,6 +243,12 @@
     var o = opt();
     o.text = $("#wsText").value; o.chars = $("#wsChars").value; o.chRows = +$("#wsChRows").value; o.chTrace = +$("#wsChTrace").value; o.grid = $("#wsGrid").value; o.cell = +$("#wsCell").value; o.cols = +$("#wsCols").value; o.chCols = +$("#wsChCols").value; o.rows = +$("#wsRows").value;
     o.trace = $("#wsTrace").value; o.showPy = $("#wsPy").checked; o.answers = $("#wsAns").checked; o.by = "MANHXD";
+    if ($("#wsTvText")) {
+      o.tvText = $("#wsTvText").value; o.tvTitle = $("#wsTvTitle").value; o.tvSub = $("#wsTvSub").value; o.tvRowH = +$("#wsTvRowH").value; o.tvBg = $("#wsTvBg").value; o.tvOrder = $("#wsTvOrder").value;
+      o.tvMi = $("#wsTvMi").checked; o.tvFill = $("#wsTvFill").checked; o.tvAns = $("#wsTvAns").checked;
+      o.tvPre = Array.prototype.map.call(document.querySelectorAll(".wsTvPre:checked"), function (x) { return x.value; }).join(",");
+      var sh = $("#wsTvShuf"); if (sh) sh.hidden = o.tvOrder !== "shuffle";
+    }
     A.save(); return o;
   }
   var cvState = 0, cvWait = [];
@@ -176,7 +261,9 @@
   function refresh() {
     if (!$("#wsOut")) return; var o = read();
     if (o.mode === "chu" && A.loadStrokes) { var cs = charList(o); return loadCharVi(function () { A.loadStrokes(cs, function () { if ($("#wsOut")) $("#wsOut").innerHTML = sheetHTML(o); }); }); }
+    if (o.mode === "tv" && A.loadDict) A.loadDict();
     $("#wsOut").innerHTML = sheetHTML(o);
+    if (o.mode === "tv") { var nv = tvParse(o.tvText).filter(function (it) { return it.hz && !it.vi; }).length; return msg(nv ? nv + " từ chưa tìm thấy nghĩa tiếng Việt, gõ thêm theo dạng: 中文 | nghĩa" : ""); }
     var miss = parse(o.text).filter(function (it) { return !it.hz; }).length;
     msg(miss ? miss + " câu chưa có chữ Hán nên chưa có pinyin, chữ mẫu và trang đáp án. Bấm \"Dịch sang tiếng Trung\" hoặc gõ theo dạng: Câu tiếng Việt | 中文" : "");
   }
@@ -239,7 +326,7 @@
       if (!dl) return printNative(o);
       saving = true;
       try {
-        var name = "phieu-tap-viet-" + (o.mode === "chu" ? "theo-chu" : "theo-cau") + "-MANHXD.html";
+        var name = (o.mode === "tv" ? "phieu-tu-vung" : "phieu-tap-viet-" + (o.mode === "chu" ? "theo-chu" : "theo-cau")) + "-MANHXD.html";
         await dl.save({ filename: name, data: standalone(o, sheetHTML(o)) });
         msg("Đã tải " + name + ". Mở file, máy sẽ hiện hộp in: chọn \"Lưu dưới dạng PDF\" hoặc in thẳng ra giấy A4.");
       } catch (e) {
@@ -251,11 +338,20 @@
   window.addEventListener("afterprint", function () { document.body.classList.remove("printing-ws"); });
 
   document.addEventListener("input", function (e) { if (e.target.closest && e.target.closest(".ws-form")) refresh(); });
-  document.addEventListener("change", function (e) { if (e.target.closest && e.target.closest(".ws-form")) refresh(); });
+  document.addEventListener("change", function (e) {
+    if (e.target.id === "wsTvSrc" && e.target.value) {
+      var src = e.target.value, ws = (A.VOCAB || []).filter(function (v) { return A.inSrc(v, src); });
+      $("#wsTvText").value = ws.map(function (v) { return v.hz + " | " + v.vi; }).join("\n");
+      var opt0 = e.target.options[e.target.selectedIndex]; if (!$("#wsTvSub").value && opt0) $("#wsTvSub").value = opt0.textContent;
+      e.target.value = "";
+    }
+    if (e.target.closest && e.target.closest(".ws-form")) refresh();
+  });
   document.addEventListener("click", function (e) {
     if (e.target.id === "wsPrint") printSheet();
     if (e.target.id === "wsTrans") translate();
-    if (e.target.id === "wsSample") { if (opt().mode === "chu") $("#wsChars").value = SAMPLE_CH; else $("#wsText").value = SAMPLE; refresh(); }
+    if (e.target.id === "wsSample") { if (opt().mode === "chu") $("#wsChars").value = SAMPLE_CH; else if (opt().mode === "tv") $("#wsTvText").value = SAMPLE_TV; else $("#wsText").value = SAMPLE; refresh(); }
+    if (e.target.id === "wsTvShuf") { opt().tvSeed = (+opt().tvSeed || 1) + 1; A.save(); refresh(); }
     var m = e.target.closest && e.target.closest("[data-wsmode]");
     if (m) { read(); opt().mode = m.dataset.wsmode; A.save(); A.go("phieuviet"); }
   });

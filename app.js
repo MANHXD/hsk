@@ -435,9 +435,8 @@
     var done = Object.keys(S.done).filter(function (k) { return S.done[k]; }).length;
     $("#stats").innerHTML = '<span class="pts">Điểm <b>' + S.points + "</b></span><span>Đã thuộc <b>" + learned + "</b> từ</span><span>Hoàn thành <b>" + done + "/" + DATA.lessons.length + "</b> bài</span>";
   }
-  var TABS = ["lotrinh", "tracuu", "baihoc", "baigiang", "tuvung", "phatam", "kiemtra", "trochoi", "phieuviet", "nghe", "btvn"];
+  var TABS = ["lotrinh", "tracuu", "baihoc", "baigiang", "tuvung", "phatam", "kiemtra", "trochoi", "phieuviet", "nghe"];
   function go(tab) {
-    if (tab === "kiemtra") { S.btvn = S.btvn || {}; S.btvn.sub = "kt"; S.btvn.cur = ""; tab = "btvn"; }
     if (TABS.indexOf(tab) < 0) tab = "lotrinh";
     stopQuiz();
     if (window.HSK_GAMES) window.HSK_GAMES.stop();
@@ -942,7 +941,7 @@
 
   // API cho games.js (nạp sau app.js)
   window.HSK_APP = { S: S, save: save, VOCAB: VOCAB, DATA: DATA, speak: speak, esc: esc, toneSpans: toneSpans, pyColored: pyColored, parseSyl: parseSyl,
-    lessonOptions: lessonOptions, inSrc: inSrc, renderStats: renderStats, playBtn: playBtn, go: function (t) { go(t); }, quizView: function () { return vQuizSetup(); }, pinyinOf: pinyinOf, charInfo: function (c) { return charItem(c); }, loadStrokes: loadStrokes, hanChars: hanChars };
+    lessonOptions: lessonOptions, inSrc: inSrc, renderStats: renderStats, playBtn: playBtn, go: function (t) { go(t); }, quizView: function () { return vQuizSetup(); }, pinyinOf: pinyinOf, lookup: lookup, loadDict: loadDict, charInfo: function (c) { return charItem(c); }, loadStrokes: loadStrokes, hanChars: hanChars };
 
   document.body.classList.toggle("hide-py", !!S.hidePy);
   document.body.classList.toggle("cover-vi", !!S.coverVi);
