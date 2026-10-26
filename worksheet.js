@@ -114,10 +114,10 @@
   }
 
   /* ---------- Phiếu luyện ghi nhớ từ vựng (MANHXD 2026-10-26) ----------
-     Mỗi dòng: "中文" hoặc "中文 | nghĩa" hoặc "nghĩa | 中文", thêm "| âm mô phỏng" nếu muốn có trong đáp án.
+     Mỗi dòng: "中文" hoặc "中文 | nghĩa" hoặc "nghĩa | 中文".
      Nghĩa và pinyin tự lấy từ kho từ vựng khi bỏ trống. */
-  var TV_COLS = [["hz", "Tiếng Trung"], ["py", "Phiên âm"], ["am", "Âm mô phỏng"], ["vi", "Nghĩa"]];
-  var TV_W = { no: 9, hz: 47, py: 36, am: 36, vi: 56 }; // tổng 184mm, chừa viền cho khổ 186mm
+  var TV_COLS = [["hz", "Tiếng Trung"], ["py", "Phiên âm"], ["vi", "Nghĩa"]];
+  var TV_W = { no: 9, hz: 55, py: 50, vi: 70 }; // tổng 184mm, chừa viền cho khổ 186mm
   function tvParse(text) {
     return String(text || "").split("\n").map(function (l) { return l.trim(); }).filter(Boolean).map(function (l) {
       var p = l.split("|").map(function (x) { return x.trim(); }), hz = "", rest = [];
@@ -171,7 +171,7 @@
       out += '<div class="ws-page ws-tvpage">' + head(o) + tvTitle(o, n > 0) + tvTable(rows, o, pre, n * per) + '<div class="ws-tvfoot">HỌC TIẾNG TRUNG CÙNG MANHXD<span>by: MANHXD</span></div></div>';
     });
     if (o.tvAns && items.some(function (it) { return it.hz; })) {
-      var all = { hz: 1, py: 1, am: 1, vi: 1 }, ko = Object.assign({}, o, { tvMi: false, tvRowH: 11, tvBg: "none" }), per2 = Math.floor((277 - 40) / 11);
+      var all = { hz: 1, py: 1, vi: 1 }, ko = Object.assign({}, o, { tvMi: false, tvRowH: 11, tvBg: "none" }), per2 = Math.floor((277 - 40) / 11);
       for (var j = 0; j < items.length; j += per2) out += '<div class="ws-page ws-tvpage ws-tvkey">' + head(o) + tvTitle(o, j > 0, true) + tvTable(items.slice(j, j + per2), ko, all, j) + '<div class="ws-tvfoot">HỌC TIẾNG TRUNG CÙNG MANHXD<span>by: MANHXD</span></div></div>';
     }
     return out;
@@ -209,7 +209,7 @@
       '<div class="panel ws-form"><div class="seg" role="tablist"><button data-wsmode="cau" aria-selected="' + cau + '">Theo câu</button><button data-wsmode="chu" aria-selected="' + chu + '">Theo chữ</button><button data-wsmode="tv" aria-selected="' + tv + '">Từ vựng</button></div>' +
       '<div' + (cau ? "" : " hidden") + '><p class="lead" style="margin:0 0 8px">Mỗi dòng một câu: <b>câu tiếng Việt | chữ Hán</b>. Phần chữ Hán không bắt buộc, có thì làm chữ mẫu và đáp án.</p><textarea id="wsText" rows="6" spellcheck="false" aria-label="Danh sách câu">' + esc(o.text) + "</textarea></div>" +
       '<div' + (chu ? "" : " hidden") + '><p class="lead" style="margin:0 0 8px">Gõ hoặc dán các chữ Hán cần luyện (dán cả câu cũng được, chữ trùng sẽ tự bỏ). Mỗi chữ một khối: chữ mẫu to, bộ thủ, cấu trúc, pinyin, số nét, thứ tự nét và các dòng ô để viết.</p><textarea id="wsChars" rows="3" spellcheck="false" aria-label="Danh sách chữ">' + esc(o.chars) + "</textarea></div>" +
-      '<div' + (tv ? "" : " hidden") + ' class="ws-tvform"><p class="lead" style="margin:0 0 8px">Mỗi dòng một từ: <b>中文</b> hoặc <b>中文 | nghĩa</b>. Bỏ trống nghĩa thì app tự lấy từ kho từ vựng. Thêm <b>| âm mô phỏng</b> ở cuối nếu muốn có trong trang đáp án.</p>' +
+      '<div' + (tv ? "" : " hidden") + ' class="ws-tvform"><p class="lead" style="margin:0 0 8px">Mỗi dòng một từ: <b>中文</b> hoặc <b>中文 | nghĩa</b>. Bỏ trống nghĩa thì app tự lấy từ kho từ vựng.</p>' +
         '<div class="row" style="margin-bottom:8px"><label>Lấy từ bài <select id="wsTvSrc"><option value="">Chọn bài...</option>' + (A.lessonOptions ? A.lessonOptions("", true) : "") + '</select></label></div>' +
         '<textarea id="wsTvText" rows="6" spellcheck="false" aria-label="Danh sách từ vựng">' + esc(o.tvText) + "</textarea>" +
         '<div class="row" style="margin-top:10px"><label>Tiêu đề <input id="wsTvTitle" class="ws-in" value="' + esc(o.tvTitle) + '"></label><label>Dòng phụ <input id="wsTvSub" class="ws-in" placeholder="vd: Bài 5, 今天我休息" value="' + esc(o.tvSub) + '"></label></div>' +
