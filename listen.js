@@ -136,10 +136,45 @@
       return '<div class="ls-trow"><span class="ls-tbai">' + (b ? "Bài " + b : "Đề thi thử") + '</span><div class="row">' + ks.map(chip).join("") + "</div></div>";
     }).join("") + "</div></div>";
   }
+
+  // File nghe giáo trình HSK 3.0 bản 2026 (HSK 2, 3, 4A), phát thẳng từ CDN của Baúl Chino (baulchino.com/new-hsk-audios-2026)
+  var CDN = "https://cdn.baulchino.com/new-hsk-books-audios/";
+  var BOOKS = [
+    { id: "2tb", lv: "HSK 2", name: "Giáo trình", dir: "hsk-2-textbook", n: 15, k: 8, pad: false },
+    { id: "2wb", lv: "HSK 2", name: "Sách bài tập", dir: "hsk-2-workbook", n: 15, k: 1, pad: true, mock: "mock-test-hsk2" },
+    { id: "3tb", lv: "HSK 3", name: "Giáo trình", dir: "hsk-3-textbook", n: 18, k: 8, pad: false },
+    { id: "3wb", lv: "HSK 3", name: "Sách bài tập", dir: "hsk-3-workbook", n: 18, k: 1, pad: true, mock: "mock-test-hsk3" },
+    { id: "4tb", lv: "HSK 4", name: "Giáo trình 4A", dir: "hsk-4a-textbook", n: 10, k: 8, pad: true }
+  ];
+  function two(n) { return (n < 10 ? "0" : "") + n; }
+  function bookHTML(qn, q) {
+    var cur = BOOKS.filter(function (b) { return b.id === S.nghe.book; })[0] || BOOKS[0];
+    var tabs = '<div class="ls-parts">' + BOOKS.map(function (b) { return '<button class="ls-part' + (b === cur ? " on" : "") + '" data-lsbook="' + b.id + '">' + b.lv + " · " + b.name + "</button>"; }).join("") + "</div>";
+    var rows = [];
+    for (var L = 1; L <= cur.n; L++) {
+      if (qn && qn !== L) continue;
+      var bt = [];
+      for (var i = 1; i <= cur.k; i++) { var f = (cur.pad ? two(L) : L) + "-" + i; bt.push('<button class="ls-seg" data-lsx="' + CDN + cur.dir + "/lesson-" + two(L) + "/" + f + '.mp3" data-lsxname="' + cur.lv + " " + cur.name + " · " + f + '">' + (cur.k > 1 ? L + "-" + i : "Bài nghe") + "</button>"); }
+      rows.push('<div class="ls-trow"><span class="ls-tbai">Bài ' + L + '</span><div class="ls-segs">' + bt.join("") + "</div></div>");
+    }
+    if (cur.mock && !qn) rows.push('<div class="ls-trow"><span class="ls-tbai">Đề thi thử</span><div class="ls-segs"><button class="ls-seg" data-lsx="' + CDN + cur.dir + "/" + cur.mock + '.mp3" data-lsxname="' + cur.lv + ' · Đề thi thử">Phần nghe</button></div></div>');
+    if (q && !qn) return "";
+    return '<div class="ls-bai" style="margin-top:22px"><div class="ls-baihead"><b>File nghe HSK 2, 3, 4 (giáo trình HSK 3.0 bản 2026)</b></div>' + tabs +
+      '<div class="ls-box" style="margin:10px 0"><span class="ls-sub" id="lsXName">Chọn một đoạn để nghe</span><audio id="lsXAu" class="ls-audio" controls preload="none"></audio></div>' +
+      '<div class="ls-tracks">' + rows.join("") + "</div></div>";
+  }
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest("[data-lsbook]");
+    if (b) { S.nghe.book = b.dataset.lsbook; A.save(); draw(); return; }
+    var x = e.target.closest && e.target.closest("[data-lsx]"), au = $("#lsXAu");
+    if (!x || !au) return;
+    document.querySelectorAll("[data-lsx].on").forEach(function (y) { y.classList.remove("on"); }); x.classList.add("on");
+    $("#lsXName").textContent = x.dataset.lsxname; au.src = x.dataset.lsx; au.play().catch(function () {});
+  });
   function listHTML() {
     if (!ready) return '<div class="empty">Đang tải danh sách...</div>';
     var q = S.nghe.q || "", rows = sorted().filter(function (it) { return match(it, q); }), qn = /^\d+$/.test(q) ? +q : 0;
-    var head = trackBlock(qn, q);
+    var head = trackBlock(qn, q) + bookHTML(qn, q);
     return head || '<div class="empty">Không thấy bài phù hợp.</div>';
   }
 
