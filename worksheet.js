@@ -186,9 +186,8 @@
     }).join("") + "</div>" : "";
     // 5 ô: 2 câu cạnh nhau, 4 ô: 3 câu (lề trái phải 7mm), 2 ô: 5 cột cho kín khổ A4
     var ncol = cauNcol(cols), wide = ncol > Math.floor(189 / (cols * c + 3));
-    if (ncol > 2) body = body.replace(/class="ws-q"/g, 'class="ws-q" style="min-height:12.9mm"'); /* câu dài xuống 2 dòng vẫn thẳng hàng ô */
     if (ncol > 1) body = '<div class="ws-two" style="grid-template-columns:' + Array(ncol + 1).join(cols * c + "mm ").trim() + (wide ? ";column-gap:2mm" : "") + '">' + body + "</div>";
-    return '<div class="ws-page' + (wide ? " ws-wide" : "") + '" data-ncol="' + ncol + '">' + head(o) + body + "</div>" + ans;
+    return '<div class="ws-page' + (wide ? " ws-wide" : "") + '" data-ncol="' + ncol + '">' + body + "</div>" + ans;
   }
   // số câu một hàng: lề thường 186mm (khe 3mm), thêm được cột thì thu lề còn 7mm (196mm, khe 2mm)
   function cauNcol(cols) { var w = cols * CELL; return Math.max(1, Math.floor(189 / (w + 3)), Math.floor(198 / (w + 2))); }
@@ -228,7 +227,6 @@
     if (nr >= 1) for (j = 0; j < ncol; j++) add(nr); // hàng ngắn hơn cho vừa phần còn lại
     if (!out.length) return;
     var html = out.join("");
-    if (ncol > 2) html = html.replace(/class="ws-q"/g, 'class="ws-q" style="min-height:12.9mm"');
     (page.querySelector(".ws-two") || page).insertAdjacentHTML("beforeend", html);
   }
 

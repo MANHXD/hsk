@@ -499,6 +499,8 @@ footer { color: var(--muted); font-size: 13px; padding-block: 0 40px; }
 .ws-by { font-size: 3mm; color: #777; }
 .ws-date i { display: inline-block; width: 9mm; }
 .ws-item { break-inside: avoid; page-break-inside: avoid; margin-bottom: 6mm; }
+.ws-two > .ws-item { display: flex; flex-direction: column; } /* câu dài xuống 2 dòng: dòng pinyin và ô vẫn thẳng hàng */
+.ws-two > .ws-item > .ws-py { margin-top: auto; }
 .ws-page.ws-wide { padding-left: 7mm; padding-right: 7mm; }
 .ws-q { font-weight: 700; font-size: 4.2mm; margin-bottom: 3mm; }
 .ws-py { display: flex; align-items: flex-end; gap: 4mm; margin-bottom: 4mm; }
