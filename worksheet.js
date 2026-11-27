@@ -179,18 +179,19 @@
   function sheetHTML(o) {
     if (o.mode === "chu") return charSheetHTML(o);
     if (o.mode === "tv") return tvSheetHTML(o);
-    var items = parse(o.text), c = CELL, cols = Math.min(+o.cols || 10, Math.floor(186 / CELL)), rows = Math.max(1, Math.min(8, +o.rows || 3));
+    var items = parse(o.text), c = CELL, cols = Math.min(+o.cols || 10, Math.floor(186 / CELL)), rows = Math.max(1, Math.min(11, +o.rows || 3));
     var body = items.map(function (it, n) { return cauItem(it, n, o, cols, rows); }).join("");
     var ans = o.answers && items.some(function (it) { return it.hz; }) ? '<div class="ws-ans"><div class="ws-anstitle">Đáp án</div>' + items.map(function (it, n) {
       return "<div><b>" + (n + 1) + ".</b> " + esc(it.vi) + '<div class="ws-hz ws-ansz">' + esc(it.hz || "...") + '</div><div class="ws-anspy">' + esc(it.py || "") + "</div></div>";
     }).join("") + "</div>" : "";
     // 5 ô: 2 câu cạnh nhau, 4 ô: 3 câu (lề trái phải 7mm), 2 ô: 5 cột cho kín khổ A4
-    var ncol = cauNcol(cols), wide = ncol === 3;
+    var ncol = cauNcol(cols), wide = ncol > Math.floor(189 / (cols * c + 3));
     if (ncol > 2) body = body.replace(/class="ws-q"/g, 'class="ws-q" style="min-height:12.9mm"'); /* câu dài xuống 2 dòng vẫn thẳng hàng ô */
     if (ncol > 1) body = '<div class="ws-two" style="grid-template-columns:' + Array(ncol + 1).join(cols * c + "mm ").trim() + (wide ? ";column-gap:2mm" : "") + '">' + body + "</div>";
     return '<div class="ws-page' + (wide ? " ws-wide" : "") + '" data-ncol="' + ncol + '">' + head(o) + body + "</div>" + ans;
   }
-  function cauNcol(cols) { return cols <= 2 ? 5 : cols === 4 ? 3 : cols <= 5 ? 2 : 1; }
+  // số câu một hàng: lề thường 186mm (khe 3mm), thêm được cột thì thu lề còn 7mm (196mm, khe 2mm)
+  function cauNcol(cols) { var w = cols * CELL; return Math.max(1, Math.floor(189 / (w + 3)), Math.floor(198 / (w + 2))); }
   function cauItem(it, n, o, cols, rows, rep) {
     var c = CELL, chars = Array.from(it.hz).filter(function (ch) { return !/\s/.test(ch); }), tr = [];
     if (o.trace !== "none" && chars.length) {
@@ -208,7 +209,7 @@
     if (!page || o.mode !== "cau" || !o.fill) return;
     var items = parse(o.text), its = page.querySelectorAll(".ws-item");
     if (!items.length || !its.length) return;
-    var MM = 96 / 25.4, cols = Math.min(+o.cols || 10, Math.floor(186 / CELL)), rows = Math.max(1, Math.min(8, +o.rows || 3)), ncol = cauNcol(cols);
+    var MM = 96 / 25.4, cols = Math.min(+o.cols || 10, Math.floor(186 / CELL)), rows = Math.max(1, Math.min(11, +o.rows || 3)), ncol = cauNcol(cols);
     var top0 = page.getBoundingClientRect().top + parseFloat(getComputedStyle(page).paddingTop);
     var HP = 277 - 1.5, gap = 6, rowsY = [], hh = 0;
     Array.prototype.forEach.call(its, function (el) {
@@ -254,11 +255,11 @@
         '<div class="row" style="margin-top:10px"><label class="toggle"><input type="checkbox" id="wsTvMi"' + (o.tvMi ? " checked" : "") + '> Kẻ ô mễ ở cột Tiếng Trung</label><label class="toggle"><input type="checkbox" id="wsTvFill"' + (o.tvFill ? " checked" : "") + '> Thêm dòng trống cho kín trang</label><label class="toggle"><input type="checkbox" id="wsTvAns"' + (o.tvAns ? " checked" : "") + "> Trang đáp án</label></div></div>" +
       '<div class="row">' +
         "<label>Kiểu ô " + sel("wsGrid", o.grid, [["mi", "Ô mễ 米"], ["tian", "Ô điền 田"]]) + "</label>" +
-        "<label" + (cau ? "" : " hidden") + ">Số ô ngang " + sel("wsCols", o.cols, [2, 4, 5, 6, 7, 8, 9, 10, 11].map(function (n) { return [n, n + " ô"]; })) + "</label>" +
+        "<label" + (cau ? "" : " hidden") + ">Số ô ngang " + sel("wsCols", o.cols, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(function (n) { return [n, n + " ô"]; })) + "</label>" +
         "<label" + (chu ? "" : " hidden") + ">Số ô ngang " + sel("wsChCols", o.chCols, [4, 5, 6, 7, 8, 9, 10].map(function (n) { return [n, n + " ô"]; })) + "</label>" +
         '<input type="hidden" id="wsCell" value="' + o.cell + '">' +
         '<span class="row" style="display:contents"' + (cau ? "" : " hidden") + ">" +
-        "<label" + (cau ? "" : " hidden") + ">Số dòng mỗi câu " + sel("wsRows", o.rows, [[1, "1"], [2, "2"], [3, "3"], [4, "4"], [5, "5"], [6, "6"]]) + "</label>" +
+        "<label" + (cau ? "" : " hidden") + ">Số dòng mỗi câu " + sel("wsRows", o.rows, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(function (n) { return [n, String(n)]; })) + "</label>" +
         "<label" + (cau ? "" : " hidden") + ">Chữ mẫu mờ " + sel("wsTrace", o.trace, [["none", "Không"], ["row", "Dòng đầu"], ["all", "Kín cả lưới"]]) + "</label></span>" +
         "<label" + (chu ? "" : " hidden") + ">Số dòng mỗi chữ " + sel("wsChRows", o.chRows, [[1, "1"], [2, "2"], [3, "3"], [4, "4"]]) + "</label>" +
         "<label" + (chu ? "" : " hidden") + ">Ô tô mờ " + sel("wsChTrace", o.chTrace, [[0, "Không"], [1, "1 ô"], [3, "3 ô"], [5, "5 ô"], [-1, "Cả dòng đầu"]]) + "</label>" +
