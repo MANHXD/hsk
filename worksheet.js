@@ -224,7 +224,7 @@
     for (var e = (ncol - rowsY[rowsY.length - 1].n) % ncol; e > 0; e--) add(rows); // ô trống cuối hàng
     while (free >= full) { for (var j = 0; j < ncol; j++) add(rows); free -= full; }
     var nr = Math.floor((free - hh) / CELL);
-    if (nr >= 1) for (j = 0; j < ncol; j++) add(nr); // hàng ngắn hơn cho vừa phần còn lại
+    if (nr >= Math.min(2, rows)) for (j = 0; j < ncol; j++) add(Math.min(nr, rows)); // hàng ngắn hơn cho vừa phần còn lại, ít nhất 2 dòng (1 dòng thì chỉ có chữ mẫu, không còn chỗ viết)
     if (!out.length) return;
     var html = out.join("");
     (page.querySelector(".ws-two") || page).insertAdjacentHTML("beforeend", html);
