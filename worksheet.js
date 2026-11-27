@@ -9,7 +9,7 @@
   var SAMPLE = "Tôi 30 tuổi rồi, còn bạn? | 我三十岁了，你呢？\nBố bạn năm nay bao nhiêu tuổi? | 你爸爸今年多大了？\nCon trai tôi năm nay 8 tuổi. | 我儿子今年八岁。\nTôi có 2 quyển sách tiếng Trung. | 我有两本中文书。";
   var SAMPLE_CH = "儿子孩子女";
   var SAMPLE_TV = "好\n你\n大\n家\n大家\n您\n们\n你们\n学生\n老师";
-  var DEF = { mode: "cau", text: SAMPLE, chars: SAMPLE_CH, grid: "mi", cell: 13, rows: 3, trace: "none", showPy: false, answers: true, by: "MANHXD", chRows: 2, chTrace: 0, chOrder: true, chNote: true, cols: 10, chCols: 10, tvText: SAMPLE_TV, tvTitle: "TỪ VỰNG", tvSub: "", tvPre: "vi", tvRowH: 15, tvBg: "oli", tvMi: true, tvOrder: "keep", tvSeed: 1, tvAns: true, tvFill: true };
+  var DEF = { mode: "cau", text: SAMPLE, chars: SAMPLE_CH, grid: "mi", cell: 13, rows: 3, trace: "none", showPy: false, answers: true, by: "MANHXD", chRows: 2, chTrace: 0, chOrder: true, chNote: true, cols: 10, chCols: 10, tvText: SAMPLE_TV, tvTitle: "TỪ VỰNG", tvSub: "", tvPre: "vi", tvRowH: 15, tvBg: "oli", tvMi: true, tvOrder: "keep", tvSeed: 1, tvAns: true, tvFill: true, fill: true };
   var CELL = 16; // cỡ ô chuẩn (mm), cố định; đổi số ô chỉ đổi độ dài lưới
   function opt() { var o = S.sheet || (S.sheet = {}); Object.keys(DEF).forEach(function (k) { if (o[k] === undefined) o[k] = DEF[k]; }); return o; }
 
@@ -179,25 +179,55 @@
   function sheetHTML(o) {
     if (o.mode === "chu") return charSheetHTML(o);
     if (o.mode === "tv") return tvSheetHTML(o);
-    var items = parse(o.text), c = CELL, cols = Math.min(+o.cols || 10, Math.floor(186 / CELL)), rows = Math.max(1, Math.min(8, +o.rows || 3));
-    var body = items.map(function (it, n) {
-      var chars = Array.from(it.hz).filter(function (ch) { return !/\s/.test(ch); }), tr = [];
-      if (o.trace !== "none" && chars.length) {
-        if (o.trace === "row") chars.slice(0, cols).forEach(function (ch, k) { tr.push({ r: 0, k: k, ch: ch }); });
-        else if (o.trace === "all") chars.slice(0, cols * rows).forEach(function (ch, k) { tr.push({ r: Math.floor(k / cols), k: k % cols, ch: ch }); });
-      }
-      return '<div class="ws-item" style="width:' + cols * c + 'mm"><div class="ws-q">' + (n + 1) + ". " + esc(it.vi) + "</div>" +
-        '<div class="ws-py">' + (cols <= 2 ? "" : "<span>pinyin</span>") + '<div class="ws-pyline">' + (o.showPy && it.py ? '<em>' + esc(it.py) + "</em>" : "") + "</div></div>" +
-        gridSVG(cols, rows, c, o.grid, tr) + "</div>";
-    }).join("");
+    var items = parse(o.text), c = CELL, cols = Math.min(+o.cols || 10, Math.floor(186 / CELL)), rows = Math.max(1, Math.min(11, +o.rows || 3));
+    var body = items.map(function (it, n) { return cauItem(it, n, o, cols, rows); }).join("");
     var ans = o.answers && items.some(function (it) { return it.hz; }) ? '<div class="ws-ans"><div class="ws-anstitle">Đáp án</div>' + items.map(function (it, n) {
       return "<div><b>" + (n + 1) + ".</b> " + esc(it.vi) + '<div class="ws-hz ws-ansz">' + esc(it.hz || "...") + '</div><div class="ws-anspy">' + esc(it.py || "") + "</div></div>";
     }).join("") + "</div>" : "";
-    // 5 ô trở xuống: xếp 2 câu cạnh nhau, 2 ô: xếp 5 cột cho kín khổ A4
-    var ncol = cols <= 2 ? 5 : cols <= 5 ? 2 : 1;
-    if (ncol > 2) body = body.replace(/class="ws-q"/g, 'class="ws-q" style="min-height:12.9mm"'); /* câu dài xuống 2 dòng vẫn thẳng hàng ô */
-    if (ncol > 1) body = '<div class="ws-two" style="grid-template-columns:' + Array(ncol + 1).join(cols * c + "mm ").trim() + '">' + body + "</div>";
-    return '<div class="ws-page' + "" + '">' + head(o) + body + "</div>" + ans;
+    // 5 ô: 2 câu cạnh nhau, 4 ô: 3 câu (lề trái phải 7mm), 2 ô: 5 cột cho kín khổ A4
+    var ncol = cauNcol(cols), wide = ncol > Math.floor(189 / (cols * c + 3));
+    if (ncol > 1) body = '<div class="ws-two" style="grid-template-columns:' + Array(ncol + 1).join(cols * c + "mm ").trim() + (wide ? ";column-gap:2mm" : "") + '">' + body + "</div>";
+    return '<div class="ws-page' + (wide ? " ws-wide" : "") + '" data-ncol="' + ncol + '">' + body + "</div>" + ans;
+  }
+  // số câu một hàng: lề thường 186mm (khe 3mm), thêm được cột thì thu lề còn 7mm (196mm, khe 2mm)
+  function cauNcol(cols) { var w = cols * CELL; return Math.max(1, Math.floor(189 / (w + 3)), Math.floor(198 / (w + 2))); }
+  function cauItem(it, n, o, cols, rows, rep) {
+    var c = CELL, chars = Array.from(it.hz).filter(function (ch) { return !/\s/.test(ch); }), tr = [];
+    if (o.trace !== "none" && chars.length) {
+      if (o.trace === "row") chars.slice(0, cols).forEach(function (ch, k) { tr.push({ r: 0, k: k, ch: ch }); });
+      else if (o.trace === "all") chars.slice(0, cols * rows).forEach(function (ch, k) { tr.push({ r: Math.floor(k / cols), k: k % cols, ch: ch }); });
+    }
+    return '<div class="ws-item' + (rep ? " ws-rep" : "") + '" style="width:' + cols * c + 'mm"><div class="ws-q">' + (n + 1) + ". " + esc(it.vi) + "</div>" +
+      '<div class="ws-py">' + (cols <= 2 ? "" : "<span>pinyin</span>") + '<div class="ws-pyline">' + (o.showPy && it.py ? '<em>' + esc(it.py) + "</em>" : "") + "</div></div>" +
+      gridSVG(cols, rows, c, o.grid, tr) + "</div>";
+  }
+  /* Lặp lại các câu cho kín chỗ trống của trang cuối (MANHXD 2026-11-27: tối ưu giấy).
+     Đo khối thật trong khung xem trước (rộng 210mm, cao nội dung 277mm như khi in), không đổi cỡ ô. */
+  function fillCau(root, o) {
+    var page = root && root.querySelector(".ws-page");
+    if (!page || o.mode !== "cau" || !o.fill) return;
+    var items = parse(o.text), its = page.querySelectorAll(".ws-item");
+    if (!items.length || !its.length) return;
+    var MM = 96 / 25.4, cols = Math.min(+o.cols || 10, Math.floor(186 / CELL)), rows = Math.max(1, Math.min(11, +o.rows || 3)), ncol = cauNcol(cols);
+    var top0 = page.getBoundingClientRect().top + parseFloat(getComputedStyle(page).paddingTop);
+    var HP = 277 - 1.5, gap = 6, rowsY = [], hh = 0;
+    Array.prototype.forEach.call(its, function (el) {
+      var r = el.getBoundingClientRect(), t = Math.round((r.top - top0) / MM * 10) / 10, h = r.height / MM, g = el.querySelector(".ws-grid").getBoundingClientRect().height / MM;
+      hh = Math.max(hh, h - g + gap);
+      var last = rowsY[rowsY.length - 1];
+      if (last && Math.abs(last.t - t) < 1) { last.h = Math.max(last.h, h + gap); last.n++; } else rowsY.push({ t: t, h: h + gap, n: 1 });
+    });
+    var y = rowsY[0].t; // chiều cao đầu trang (họ tên, ngày)
+    rowsY.forEach(function (r) { if (y + r.h > HP && y > 0) y = 0; y += r.h; });
+    var free = HP - y, full = hh + rows * CELL, out = [], k = its.length;
+    function add(nr) { var i = k % items.length; out.push(cauItem(items[i], i, o, cols, nr, true)); k++; }
+    for (var e = (ncol - rowsY[rowsY.length - 1].n) % ncol; e > 0; e--) add(rows); // ô trống cuối hàng
+    while (free >= full) { for (var j = 0; j < ncol; j++) add(rows); free -= full; }
+    var nr = Math.floor((free - hh) / CELL);
+    if (nr >= 1) for (j = 0; j < ncol; j++) add(nr); // hàng ngắn hơn cho vừa phần còn lại
+    if (!out.length) return;
+    var html = out.join("");
+    (page.querySelector(".ws-two") || page).insertAdjacentHTML("beforeend", html);
   }
 
   function view() {
@@ -223,16 +253,17 @@
         '<div class="row" style="margin-top:10px"><label class="toggle"><input type="checkbox" id="wsTvMi"' + (o.tvMi ? " checked" : "") + '> Kẻ ô mễ ở cột Tiếng Trung</label><label class="toggle"><input type="checkbox" id="wsTvFill"' + (o.tvFill ? " checked" : "") + '> Thêm dòng trống cho kín trang</label><label class="toggle"><input type="checkbox" id="wsTvAns"' + (o.tvAns ? " checked" : "") + "> Trang đáp án</label></div></div>" +
       '<div class="row">' +
         "<label>Kiểu ô " + sel("wsGrid", o.grid, [["mi", "Ô mễ 米"], ["tian", "Ô điền 田"]]) + "</label>" +
-        "<label" + (cau ? "" : " hidden") + ">Số ô ngang " + sel("wsCols", o.cols, [2, 4, 5, 6, 7, 8, 9, 10, 11].map(function (n) { return [n, n + " ô"]; })) + "</label>" +
+        "<label" + (cau ? "" : " hidden") + ">Số ô ngang " + sel("wsCols", o.cols, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(function (n) { return [n, n + " ô"]; })) + "</label>" +
         "<label" + (chu ? "" : " hidden") + ">Số ô ngang " + sel("wsChCols", o.chCols, [4, 5, 6, 7, 8, 9, 10].map(function (n) { return [n, n + " ô"]; })) + "</label>" +
         '<input type="hidden" id="wsCell" value="' + o.cell + '">' +
         '<span class="row" style="display:contents"' + (cau ? "" : " hidden") + ">" +
-        "<label" + (cau ? "" : " hidden") + ">Số dòng mỗi câu " + sel("wsRows", o.rows, [[1, "1"], [2, "2"], [3, "3"], [4, "4"], [5, "5"], [6, "6"]]) + "</label>" +
+        "<label" + (cau ? "" : " hidden") + ">Số dòng mỗi câu " + sel("wsRows", o.rows, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(function (n) { return [n, String(n)]; })) + "</label>" +
         "<label" + (cau ? "" : " hidden") + ">Chữ mẫu mờ " + sel("wsTrace", o.trace, [["none", "Không"], ["row", "Dòng đầu"], ["all", "Kín cả lưới"]]) + "</label></span>" +
         "<label" + (chu ? "" : " hidden") + ">Số dòng mỗi chữ " + sel("wsChRows", o.chRows, [[1, "1"], [2, "2"], [3, "3"], [4, "4"]]) + "</label>" +
         "<label" + (chu ? "" : " hidden") + ">Ô tô mờ " + sel("wsChTrace", o.chTrace, [[0, "Không"], [1, "1 ô"], [3, "3 ô"], [5, "5 ô"], [-1, "Cả dòng đầu"]]) + "</label>" +
       "</div><div class=\"row\">" +
         '<label class="toggle"' + (cau ? "" : " hidden") + '><input type="checkbox" id="wsPy"' + (o.showPy ? " checked" : "") + "> Ghi sẵn pinyin</label>" +
+        '<label class="toggle"' + (cau ? "" : " hidden") + '><input type="checkbox" id="wsFill"' + (o.fill ? " checked" : "") + "> Lặp lại cho kín trang</label>" +
         '<label class="toggle"' + (cau ? "" : " hidden") + '><input type="checkbox" id="wsAns"' + (o.answers ? " checked" : "") + "> Trang đáp án</label>" +
         '<button class="btn" id="wsTrans"' + (cau ? "" : " hidden") + '>Dịch sang tiếng Trung</button><button class="btn primary" id="wsPrint">Tải file / In</button><button class="btn" id="wsSample">Câu mẫu</button>' +
       "</div><p class=\"ws-msg\" id=\"wsMsg\" hidden></p></div>" +
@@ -242,7 +273,7 @@
   function read() {
     var o = opt();
     o.text = $("#wsText").value; o.chars = $("#wsChars").value; o.chRows = +$("#wsChRows").value; o.chTrace = +$("#wsChTrace").value; o.grid = $("#wsGrid").value; o.cell = +$("#wsCell").value; o.cols = +$("#wsCols").value; o.chCols = +$("#wsChCols").value; o.rows = +$("#wsRows").value;
-    o.trace = $("#wsTrace").value; o.showPy = $("#wsPy").checked; o.answers = $("#wsAns").checked; o.by = "MANHXD";
+    o.trace = $("#wsTrace").value; o.showPy = $("#wsPy").checked; o.answers = $("#wsAns").checked; o.fill = $("#wsFill").checked; o.by = "MANHXD";
     if ($("#wsTvText")) {
       o.tvText = $("#wsTvText").value; o.tvTitle = $("#wsTvTitle").value; o.tvSub = $("#wsTvSub").value; o.tvRowH = +$("#wsTvRowH").value; o.tvBg = $("#wsTvBg").value; o.tvOrder = $("#wsTvOrder").value;
       o.tvMi = $("#wsTvMi").checked; o.tvFill = $("#wsTvFill").checked; o.tvAns = $("#wsTvAns").checked;
@@ -263,6 +294,7 @@
     if (o.mode === "chu" && A.loadStrokes) { var cs = charList(o); return loadCharVi(function () { A.loadStrokes(cs, function () { if ($("#wsOut")) $("#wsOut").innerHTML = sheetHTML(o); }); }); }
     if (o.mode === "tv" && A.loadDict) A.loadDict();
     $("#wsOut").innerHTML = sheetHTML(o);
+    if (o.mode === "cau") { fillCau($("#wsOut"), o); if (document.fonts && document.fonts.status !== "loaded") document.fonts.ready.then(function () { if ($("#wsOut") && opt().mode === "cau") { $("#wsOut").innerHTML = sheetHTML(opt()); fillCau($("#wsOut"), opt()); } }); }
     if (o.mode === "tv") { var nv = tvParse(o.tvText).filter(function (it) { return it.hz && !it.vi; }).length; return msg(nv ? nv + " từ chưa tìm thấy nghĩa tiếng Việt, gõ thêm theo dạng: 中文 | nghĩa" : ""); }
     var miss = parse(o.text).filter(function (it) { return !it.hz; }).length;
     msg(miss ? miss + " câu chưa có chữ Hán nên chưa có pinyin, chữ mẫu và trang đáp án. Bấm \"Dịch sang tiếng Trung\" hoặc gõ theo dạng: Câu tiếng Việt | 中文" : "");
@@ -311,10 +343,15 @@
   function prep(o, cb) {
     (o.mode === "chu" && A.loadStrokes ? function (f) { loadCharVi(function () { A.loadStrokes(charList(o), f); }); } : function (f) { f(); })(cb);
   }
+  function finalHTML(o) { // phiếu theo câu: lấy bản xem trước đã lặp cho kín trang
+    var out = $("#wsOut");
+    if (o.mode === "cau" && out && out.querySelector(".ws-page")) { out.innerHTML = sheetHTML(o); fillCau(out, o); return out.innerHTML; }
+    return sheetHTML(o);
+  }
   function printNative(o) {
     var root = document.getElementById("printRoot");
     if (!root) { root = document.createElement("div"); root.id = "printRoot"; document.body.appendChild(root); }
-    root.innerHTML = sheetHTML(o);
+    root.innerHTML = finalHTML(o);
     document.body.classList.add("printing-ws");
     setTimeout(function () { try { window.print(); } catch (e) {} }, 50);
   }
@@ -327,7 +364,7 @@
       saving = true;
       try {
         var name = (o.mode === "tv" ? "phieu-tu-vung" : "phieu-tap-viet-" + (o.mode === "chu" ? "theo-chu" : "theo-cau")) + "-MANHXD.html";
-        await dl.save({ filename: name, data: standalone(o, sheetHTML(o)) });
+        await dl.save({ filename: name, data: standalone(o, finalHTML(o)) });
         msg("Đã tải " + name + ". Mở file, máy sẽ hiện hộp in: chọn \"Lưu dưới dạng PDF\" hoặc in thẳng ra giấy A4.");
       } catch (e) {
         var c = e && e.code;
@@ -356,6 +393,6 @@
     if (m) { read(); opt().mode = m.dataset.wsmode; A.save(); A.go("phieuviet"); }
   });
 
-  window.HSK_SHEET = { view: view, refresh: refresh, sheetHTML: sheetHTML, charList: charList };
+  window.HSK_SHEET = { view: view, refresh: refresh, sheetHTML: sheetHTML, fillCau: fillCau, finalHTML: finalHTML, charList: charList };
   if (S.tab === "phieuviet") A.go("phieuviet");
 })();
