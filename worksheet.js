@@ -9,7 +9,7 @@
   var SAMPLE = "Tôi 30 tuổi rồi, còn bạn? | 我三十岁了，你呢？\nBố bạn năm nay bao nhiêu tuổi? | 你爸爸今年多大了？\nCon trai tôi năm nay 8 tuổi. | 我儿子今年八岁。\nTôi có 2 quyển sách tiếng Trung. | 我有两本中文书。";
   var SAMPLE_CH = "儿子孩子女";
   var SAMPLE_TV = "好\n你\n大\n家\n大家\n您\n们\n你们\n学生\n老师";
-  var DEF = { mode: "cau", text: SAMPLE, chars: SAMPLE_CH, grid: "mi", cell: 13, rows: 3, trace: "none", showPy: false, answers: true, by: "MANHXD", chRows: 2, chTrace: 0, chOrder: true, chNote: true, cols: 10, chCols: 10, tvText: SAMPLE_TV, tvTitle: "TỪ VỰNG", tvSub: "", tvPre: "vi", tvRowH: 15, tvBg: "oli", tvMi: true, tvOrder: "keep", tvSeed: 1, tvAns: true, tvFill: true, fill: true };
+  var DEF = { mode: "cau", text: SAMPLE, chars: SAMPLE_CH, grid: "mi", cell: 13, rows: 3, trace: "none", showPy: false, answers: true, by: "MANHXD", chRows: 2, chTrace: 0, chOrder: true, chNote: true, cols: 10, chCols: 10, tvText: SAMPLE_TV, tvTitle: "TỪ VỰNG", tvSub: "", tvPre: "vi", tvRowH: 15, tvBg: "oli", tvMi: true, tvOrder: "keep", tvSeed: 1, tvAns: true, tvFill: true, fillOn: false };
   var CELL = 16; // cỡ ô chuẩn (mm), cố định; đổi số ô chỉ đổi độ dài lưới
   function opt() { var o = S.sheet || (S.sheet = {}); Object.keys(DEF).forEach(function (k) { if (o[k] === undefined) o[k] = DEF[k]; }); return o; }
 
@@ -205,7 +205,7 @@
      Đo khối thật trong khung xem trước (rộng 210mm, cao nội dung 277mm như khi in), không đổi cỡ ô. */
   function fillCau(root, o) {
     var page = root && root.querySelector(".ws-page");
-    if (!page || o.mode !== "cau" || !o.fill) return;
+    if (!page || o.mode !== "cau" || !o.fillOn) return;
     var items = parse(o.text), its = page.querySelectorAll(".ws-item");
     if (!items.length || !its.length) return;
     var MM = 96 / 25.4, cols = Math.min(+o.cols || 10, Math.floor(186 / CELL)), rows = Math.max(1, Math.min(11, +o.rows || 3)), ncol = cauNcol(cols);
@@ -263,7 +263,7 @@
         "<label" + (chu ? "" : " hidden") + ">Ô tô mờ " + sel("wsChTrace", o.chTrace, [[0, "Không"], [1, "1 ô"], [3, "3 ô"], [5, "5 ô"], [-1, "Cả dòng đầu"]]) + "</label>" +
       "</div><div class=\"row\">" +
         '<label class="toggle"' + (cau ? "" : " hidden") + '><input type="checkbox" id="wsPy"' + (o.showPy ? " checked" : "") + "> Ghi sẵn pinyin</label>" +
-        '<label class="toggle"' + (cau ? "" : " hidden") + '><input type="checkbox" id="wsFill"' + (o.fill ? " checked" : "") + "> Lặp lại cho kín trang</label>" +
+        '<label class="toggle"' + (cau ? "" : " hidden") + '><input type="checkbox" id="wsFill"' + (o.fillOn ? " checked" : "") + "> Lặp lại cho kín trang</label>" +
         '<label class="toggle"' + (cau ? "" : " hidden") + '><input type="checkbox" id="wsAns"' + (o.answers ? " checked" : "") + "> Trang đáp án</label>" +
         '<button class="btn" id="wsTrans"' + (cau ? "" : " hidden") + '>Dịch sang tiếng Trung</button><button class="btn primary" id="wsPrint">Tải file / In</button><button class="btn" id="wsSample">Câu mẫu</button>' +
       "</div><p class=\"ws-msg\" id=\"wsMsg\" hidden></p></div>" +
@@ -273,7 +273,7 @@
   function read() {
     var o = opt();
     o.text = $("#wsText").value; o.chars = $("#wsChars").value; o.chRows = +$("#wsChRows").value; o.chTrace = +$("#wsChTrace").value; o.grid = $("#wsGrid").value; o.cell = +$("#wsCell").value; o.cols = +$("#wsCols").value; o.chCols = +$("#wsChCols").value; o.rows = +$("#wsRows").value;
-    o.trace = $("#wsTrace").value; o.showPy = $("#wsPy").checked; o.answers = $("#wsAns").checked; o.fill = $("#wsFill").checked; o.by = "MANHXD";
+    o.trace = $("#wsTrace").value; o.showPy = $("#wsPy").checked; o.answers = $("#wsAns").checked; o.fillOn = $("#wsFill").checked; o.by = "MANHXD";
     if ($("#wsTvText")) {
       o.tvText = $("#wsTvText").value; o.tvTitle = $("#wsTvTitle").value; o.tvSub = $("#wsTvSub").value; o.tvRowH = +$("#wsTvRowH").value; o.tvBg = $("#wsTvBg").value; o.tvOrder = $("#wsTvOrder").value;
       o.tvMi = $("#wsTvMi").checked; o.tvFill = $("#wsTvFill").checked; o.tvAns = $("#wsTvAns").checked;
